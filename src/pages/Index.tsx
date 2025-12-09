@@ -4,6 +4,7 @@ import { SentimentInput } from "@/components/sentiment/SentimentInput";
 import { SentimentResult } from "@/components/sentiment/SentimentResult";
 import { LoadingAnimation } from "@/components/sentiment/LoadingAnimation";
 import { SentimentHistoryCard } from "@/components/sentiment/SentimentHistoryCard";
+import { FileUpload } from "@/components/sentiment/FileUpload";
 import { useSentimentAnalysis } from "@/hooks/useSentimentAnalysis";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
@@ -27,7 +28,7 @@ const features = [
 ];
 
 const Index = () => {
-  const { isLoading, result, history, analyze, clearResult } = useSentimentAnalysis();
+  const { isLoading, isFileLoading, result, history, analyze, analyzeFile, clearResult } = useSentimentAnalysis();
 
   return (
     <div className="min-h-screen flex flex-col hero-gradient">
@@ -83,7 +84,10 @@ const Index = () => {
 
           {/* Analysis Section */}
           <section id="analyze" className="space-y-8 scroll-mt-32">
-            <SentimentInput onAnalyze={analyze} isLoading={isLoading} />
+            <div className="grid gap-6 lg:grid-cols-2">
+              <SentimentInput onAnalyze={analyze} isLoading={isLoading} />
+              <FileUpload onFileAnalyze={analyzeFile} isLoading={isFileLoading} />
+            </div>
 
             {isLoading && <LoadingAnimation />}
 
