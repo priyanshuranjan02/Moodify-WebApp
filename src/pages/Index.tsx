@@ -5,6 +5,7 @@ import { SentimentResult } from "@/components/sentiment/SentimentResult";
 import { LoadingAnimation } from "@/components/sentiment/LoadingAnimation";
 import { SentimentHistoryCard } from "@/components/sentiment/SentimentHistoryCard";
 import { FileUpload } from "@/components/sentiment/FileUpload";
+import { CsvSentimentSummary } from "@/components/sentiment/CsvSentimentSummary";
 import { useSentimentAnalysis } from "@/hooks/useSentimentAnalysis";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
@@ -28,7 +29,7 @@ const features = [
 ];
 
 const Index = () => {
-  const { isLoading, isFileLoading, result, history, analyze, analyzeFile, clearResult } = useSentimentAnalysis();
+  const { isLoading, isFileLoading, result, csvSummary, history, analyze, analyzeFile, clearResult, clearCsvSummary } = useSentimentAnalysis();
 
   return (
     <div className="min-h-screen flex flex-col hero-gradient">
@@ -89,7 +90,7 @@ const Index = () => {
               <FileUpload onFileAnalyze={analyzeFile} isLoading={isFileLoading} />
             </div>
 
-            {isLoading && <LoadingAnimation />}
+            {(isLoading || isFileLoading) && <LoadingAnimation />}
 
             {result && !isLoading && (
               <div className="space-y-4">
@@ -97,6 +98,17 @@ const Index = () => {
                 <div className="flex justify-center">
                   <Button variant="ghost" onClick={clearResult}>
                     Clear & Analyze Another
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {csvSummary && !isFileLoading && (
+              <div className="space-y-4">
+                <CsvSentimentSummary summary={csvSummary} />
+                <div className="flex justify-center">
+                  <Button variant="ghost" onClick={clearCsvSummary}>
+                    Clear & Analyze Another File
                   </Button>
                 </div>
               </div>
