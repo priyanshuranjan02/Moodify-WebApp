@@ -1,6 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { Sparkles, BarChart3, History, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const navItems = [
   { name: "Analyze", path: "/", icon: Sparkles },
@@ -46,24 +47,27 @@ export function Navbar() {
             })}
           </div>
 
-          <div className="flex md:hidden">
-            {navItems.map((item) => {
-              const isActive = location.pathname === item.path;
-              return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={cn(
-                    "p-2 rounded-lg transition-all duration-300",
-                    isActive
-                      ? "bg-primary/10 text-primary"
-                      : "text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  <item.icon className="w-5 h-5" />
-                </Link>
-              );
-            })}
+          <div className="flex items-center gap-2">
+            <div className="flex md:hidden">
+              {navItems.map((item) => {
+                const isActive = location.pathname === item.path;
+                return (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    className={cn(
+                      "p-2 rounded-lg transition-all duration-300",
+                      isActive
+                        ? "bg-primary/10 text-primary"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    <item.icon className="w-5 h-5" />
+                  </Link>
+                );
+              })}
+            </div>
+            <ThemeToggle />
           </div>
         </div>
       </div>
