@@ -23,7 +23,7 @@ dist-ssr
 *.sln
 *.sw?
 
-backend/model/
-*.bin
-*.safetensors
-*.pt
+# backend/model/
+# *.bin
+# *.safetensors
+# *.pt
