@@ -17,14 +17,19 @@ export function Navbar() {
     <nav className="fixed top-0 left-0 right-0 z-50 px-4 py-4">
       <div className="max-w-6xl mx-auto">
         <div className="glass-card px-6 py-3 flex items-center justify-between">
+
+          {/* ------------- LOGO UPDATED HERE ------------- */}
           <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-glow group-hover:scale-110 transition-transform duration-300">
-              <Sparkles className="w-5 h-5 text-primary-foreground" />
-            </div>
+            <img
+              src="/Logo2.png"   // <-- Place your file inside public/logo.png
+              alt="Moodify Logo"
+              className="h-10 w-10 rounded-xl object-cover group-hover:scale-110 transition-transform duration-300 shadow-glow"
+            />
             <span className="font-display font-bold text-xl tracking-tight">
               Mood<span className="gradient-text">ify</span>
             </span>
           </Link>
+          {/* --------------------------------------------- */}
 
           <div className="hidden md:flex items-center gap-1">
             {navItems.map((item) => {
@@ -69,6 +74,7 @@ export function Navbar() {
             </div>
             <ThemeToggle />
           </div>
+
         </div>
       </div>
     </nav>

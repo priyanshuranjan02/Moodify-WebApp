@@ -2,6 +2,7 @@ import { Brain, Users, Code2, Sparkles, ExternalLink } from "lucide-react";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
+import TeamList from "@/components/TeamList";
 
 const techStack = [
   { name: "React", description: "Frontend Framework" },
@@ -47,7 +48,7 @@ const About = () => {
                 reviews as positive, negative, or neutral, along with confidence scores.
               </p>
               <p className="text-muted-foreground leading-relaxed mt-4">
-                This project was developed as part of an ML final project, demonstrating the 
+                This project was developed as part of a Project Exhibition, demonstrating the 
                 practical application of natural language processing in real-world business scenarios.
               </p>
             </div>
@@ -75,14 +76,28 @@ const About = () => {
               <Users className="w-6 h-6 text-primary" />
               <h2 className="font-display font-semibold text-2xl">The Team</h2>
             </div>
-            <p className="text-muted-foreground mb-6">
-              Built with passion by our ML project team. We combined our expertise in 
-              machine learning, web development, and UX design to create this tool.
+            <p className="text-muted-foreground leading-relaxed">
+              Built with passion by our ML project team. We combined our expertise in
+              full-stack development and machine learning to deliver a seamless and
+              insightful sentiment analysis experience.
             </p>
-            <Button variant="glass">
-              <ExternalLink className="w-4 h-4 mr-2" />
-              View on GitHub
-            </Button>
+
+            <h3 className="font-semibold text-lg mt-6 mb-3">Our Team Members</h3>
+
+            <TeamList />
+
+
+            <a
+              href="https://github.com/priyanshuranjan02/Moodify-WebApp"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Button variant="glass">
+                <ExternalLink className="w-4 h-4 mr-2" />
+                View on GitHub
+              </Button>
+            </a>
+
           </section>
         </div>
       </main>

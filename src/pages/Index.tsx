@@ -9,6 +9,7 @@ import { CsvSentimentSummary } from "@/components/sentiment/CsvSentimentSummary"
 import { useSentimentAnalysis } from "@/hooks/useSentimentAnalysis";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { Link } from "react-router-dom";
 
 const features = [
   {
@@ -60,9 +61,13 @@ const Index = () => {
                 Start Analyzing
                 <ArrowRight className="w-5 h-5" />
               </Button>
-              <Button variant="glass" size="lg">
-                Learn More
-              </Button>
+              
+              <Link to="/about">
+                <Button variant="glass">
+                  Learn More
+                </Button>
+              </Link>
+
             </div>
           </section>
 
