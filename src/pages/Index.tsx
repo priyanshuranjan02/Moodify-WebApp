@@ -15,12 +15,12 @@ const features = [
   {
     icon: Zap,
     title: "Lightning Fast",
-    description: "Get instant sentiment analysis powered by optimized BERT inference",
+    description: "Get instant sentiment analysis powered by custom BiLSTM inference",
   },
   {
     icon: Shield,
     title: "Highly Accurate",
-    description: "State-of-the-art NLP model trained on millions of reviews",
+    description: "Custom bidirectional LSTM model trained specifically for review sentiment",
   },
   {
     icon: BarChart3,
@@ -42,7 +42,7 @@ const Index = () => {
           <section className="text-center mb-16 animate-in">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/50 border border-primary/20 text-sm font-medium mb-6">
               <Sparkles className="w-4 h-4 text-primary" />
-              BERT-Powered Sentiment Analysis
+              Custom BiLSTM-Powered Sentiment Analysis
             </div>
             
             <h1 className="font-display text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight mb-6">

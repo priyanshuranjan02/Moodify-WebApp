@@ -22,7 +22,7 @@ export function LoadingAnimation() {
         <div className="text-center space-y-2">
           <h3 className="font-display font-semibold text-lg">Analyzing Sentiment</h3>
           <p className="text-sm text-muted-foreground">
-            Our BERT model is processing your review...
+            Our custom BiLSTM model is processing your review...
           </p>
         </div>
 

@@ -8,7 +8,7 @@ const techStack = [
   { name: "React", description: "Frontend Framework" },
   { name: "TypeScript", description: "Type Safety" },
   { name: "Tailwind CSS", description: "Styling" },
-  { name: "BERT", description: "NLP Model" },
+  { name: "Custom BiLSTM", description: "Deep Learning Model" },
   { name: "Python Flask", description: "Backend API" },
   { name: "PyTorch", description: "ML Framework" },
 ];
@@ -43,13 +43,13 @@ const About = () => {
             <div className="prose prose-muted max-w-none">
               <p className="text-muted-foreground leading-relaxed">
                 Moodify is a machine learning-powered web application that performs sentiment 
-                analysis on e-commerce product reviews. Using a fine-tuned BERT (Bidirectional 
-                Encoder Representations from Transformers) model, it can accurately classify 
+                analysis on e-commerce product reviews. Using a custom trained Bidirectional LSTM 
+                (BiLSTM) deep neural network model built with PyTorch, it accurately classifies 
                 reviews as positive, negative, or neutral, along with confidence scores.
               </p>
               <p className="text-muted-foreground leading-relaxed mt-4">
                 This project was developed as part of a Project Exhibition, demonstrating the 
-                practical application of natural language processing in real-world business scenarios.
+                practical application of natural language processing and recurrent neural networks in real-world business scenarios.
               </p>
             </div>
           </section>

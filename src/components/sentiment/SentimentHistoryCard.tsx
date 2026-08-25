@@ -1,7 +1,7 @@
 import { ThumbsUp, ThumbsDown, Minus, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SentimentData } from "./SentimentResult";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, isValid } from "date-fns";
 
 interface SentimentHistoryCardProps {
   data: SentimentData;
@@ -30,9 +30,15 @@ const sentimentConfig = {
 };
 
 export function SentimentHistoryCard({ data, index }: SentimentHistoryCardProps) {
-  const config = sentimentConfig[data.sentiment];
+  const config = sentimentConfig[data.sentiment] || sentimentConfig.neutral;
   const Icon = config.icon;
-  const confidencePercent = Math.round(data.confidence * 100);
+  const confidence = typeof data.confidence === "number" ? data.confidence : 0;
+  const confidencePercent = Math.round(confidence * 100);
+
+  const formattedTime =
+    data.timestamp && isValid(data.timestamp)
+      ? formatDistanceToNow(data.timestamp, { addSuffix: true })
+      : "Recently";
 
   return (
     <div
@@ -58,7 +64,7 @@ export function SentimentHistoryCard({ data, index }: SentimentHistoryCardProps)
             <span className="font-semibold capitalize">{data.sentiment}</span>
             <span className="text-xs text-muted-foreground flex items-center gap-1">
               <Clock className="w-3 h-3" />
-              {formatDistanceToNow(data.timestamp, { addSuffix: true })}
+              {formattedTime}
             </span>
           </div>
           <p className="text-sm text-muted-foreground line-clamp-2 mb-2">

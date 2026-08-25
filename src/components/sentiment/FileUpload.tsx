@@ -16,6 +16,7 @@ export function FileUpload({ onFileAnalyze, isLoading }: FileUploadProps) {
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    if (isLoading) return;
     if (e.type === "dragenter" || e.type === "dragover") {
       setDragActive(true);
     } else if (e.type === "dragleave") {
@@ -27,7 +28,8 @@ export function FileUpload({ onFileAnalyze, isLoading }: FileUploadProps) {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-    
+    if (isLoading) return;
+
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       const file = e.dataTransfer.files[0];
       if (file.type === "text/csv" || file.name.endsWith(".csv")) {
@@ -63,12 +65,16 @@ export function FileUpload({ onFileAnalyze, isLoading }: FileUploadProps) {
       </div>
 
       <p className="text-sm text-muted-foreground">
-        Upload a CSV file with a "review" or "text" column to analyze multiple reviews at once.
+        Upload a CSV file with a <span className="font-medium text-foreground">"review"</span>,{" "}
+        <span className="font-medium text-foreground">"text"</span>,{" "}
+        <span className="font-medium text-foreground">"content"</span>, or{" "}
+        <span className="font-medium text-foreground">"comment"</span> column to analyze multiple reviews at once.
       </p>
 
       <div
         className={cn(
-          "relative border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300 cursor-pointer",
+          "relative border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300",
+          isLoading ? "opacity-60 cursor-not-allowed" : "cursor-pointer",
           dragActive
             ? "border-primary bg-primary/5"
             : "border-border/50 hover:border-primary/50 hover:bg-accent/30",
@@ -78,13 +84,18 @@ export function FileUpload({ onFileAnalyze, isLoading }: FileUploadProps) {
         onDragLeave={handleDrag}
         onDragOver={handleDrag}
         onDrop={handleDrop}
-        onClick={() => inputRef.current?.click()}
+        onClick={() => {
+          if (!isLoading) {
+            inputRef.current?.click();
+          }
+        }}
       >
         <input
           ref={inputRef}
           type="file"
           accept=".csv"
           onChange={handleChange}
+          disabled={isLoading}
           className="hidden"
         />
 
@@ -102,6 +113,7 @@ export function FileUpload({ onFileAnalyze, isLoading }: FileUploadProps) {
             <Button
               variant="ghost"
               size="sm"
+              disabled={isLoading}
               onClick={(e) => {
                 e.stopPropagation();
                 clearFile();

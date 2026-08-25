@@ -18,7 +18,7 @@ export function Footer() {
 
       {/* Subtitle (optional, consistent with your style) */}
       <p className="text-sm opacity-70 mb-3">
-        BERT-powered Sentiment Analysis WebApp
+        Custom BiLSTM-powered Sentiment Analysis WebApp
       </p>
 
       {/* GitHub Link (kept clean & minimal) */}

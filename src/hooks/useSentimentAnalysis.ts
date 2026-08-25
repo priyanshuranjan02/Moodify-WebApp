@@ -4,53 +4,100 @@ import { CsvSummaryData } from "@/components/sentiment/CsvSentimentSummary";
 import { toast } from "@/hooks/use-toast";
 
 // Backend URL
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:5001";
 
-interface ApiResponse {
-  sentiment: string;
+export interface PredictResponse {
+  sentiment: "Positive" | "Neutral" | "Negative" | string;
   confidence: number;
 }
 
-interface CsvApiResponse {
-  very_positive?: number;
-  positive?: number;
-  neutral?: number;
-  negative?: number;
-  very_negative?: number;
-  total?: number;
+export interface CsvApiResponse {
+  positive: number;
+  neutral: number;
+  negative: number;
+  total: number;
+}
+
+export interface HistoryItem {
+  text: string | null;
+  sentiment: string | null;
+  confidence: number | null;
+  timestamp: string | null;
+}
+
+export interface StatsResponse {
+  positive: number;
+  neutral: number;
+  negative: number;
+  total: number;
 }
 
 export function useSentimentAnalysis() {
   const [isLoading, setIsLoading] = useState(false);
   const [isFileLoading, setIsFileLoading] = useState(false);
+  const [isHistoryLoading, setIsHistoryLoading] = useState(false);
+  const [isStatsLoading, setIsStatsLoading] = useState(false);
   const [result, setResult] = useState<SentimentData | null>(null);
   const [csvSummary, setCsvSummary] = useState<CsvSummaryData | null>(null);
   const [history, setHistory] = useState<SentimentData[]>([]);
-  const [stats, setStats] = useState<any>(null);
+  const [stats, setStats] = useState<StatsResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [historyError, setHistoryError] = useState<string | null>(null);
+  const [statsError, setStatsError] = useState<string | null>(null);
 
   // ------------------------------------------------------
   // LOAD HISTORY FROM BACKEND
   // ------------------------------------------------------
   const loadHistoryFromDB = useCallback(async () => {
+    setIsHistoryLoading(true);
+    setHistoryError(null);
     try {
       const response = await fetch(`${API_BASE_URL}/history`);
-      const data = await response.json();
+      if (!response.ok) {
+        const errData = await response.json().catch(() => null);
+        throw new Error(errData?.error || `Server responded with status ${response.status}`);
+      }
+      const data: HistoryItem[] = await response.json();
 
-      const mapped = data.map((item: any) => ({
-        text: item.text,
-        sentiment: item.sentiment.toLowerCase().includes("positive")
-          ? "positive"
-          : item.sentiment.toLowerCase().includes("negative")
-          ? "negative"
-          : "neutral",
-        confidence: item.confidence,
-        timestamp: new Date(item.timestamp),
-      }));
+      const mapped: SentimentData[] = data
+        .filter((item) => item.text && item.sentiment)
+        .map((item) => {
+          const rawSentiment = (item.sentiment || "").toLowerCase();
+          let sentiment: "positive" | "negative" | "neutral" = "neutral";
+          if (rawSentiment.includes("positive")) {
+            sentiment = "positive";
+          } else if (rawSentiment.includes("negative")) {
+            sentiment = "negative";
+          }
+
+          let parsedDate = new Date();
+          if (item.timestamp) {
+            const d = new Date(item.timestamp);
+            if (!isNaN(d.getTime())) {
+              parsedDate = d;
+            }
+          }
+
+          return {
+            text: item.text || "",
+            sentiment,
+            confidence: typeof item.confidence === "number" ? item.confidence : 0,
+            timestamp: parsedDate,
+          };
+        });
 
       setHistory(mapped);
     } catch (err) {
-      console.error("Failed to load history", err);
+      const message =
+        err instanceof TypeError && err.message.includes("fetch")
+          ? `Unable to connect to backend server at ${API_BASE_URL}.`
+          : err instanceof Error
+          ? err.message
+          : "Failed to load history";
+      setHistoryError(message);
+      console.error("Failed to load history:", err);
+    } finally {
+      setIsHistoryLoading(false);
     }
   }, []);
 
@@ -58,12 +105,32 @@ export function useSentimentAnalysis() {
   // LOAD STATS FROM BACKEND
   // ------------------------------------------------------
   const loadStats = useCallback(async () => {
+    setIsStatsLoading(true);
+    setStatsError(null);
     try {
       const response = await fetch(`${API_BASE_URL}/stats`);
-      const data = await response.json();
-      setStats(data);
+      if (!response.ok) {
+        const errData = await response.json().catch(() => null);
+        throw new Error(errData?.error || `Server responded with status ${response.status}`);
+      }
+      const data: StatsResponse = await response.json();
+      setStats({
+        positive: data.positive || 0,
+        neutral: data.neutral || 0,
+        negative: data.negative || 0,
+        total: data.total || 0,
+      });
     } catch (err) {
-      console.error("Failed to load stats", err);
+      const message =
+        err instanceof TypeError && err.message.includes("fetch")
+          ? `Unable to connect to backend server at ${API_BASE_URL}.`
+          : err instanceof Error
+          ? err.message
+          : "Failed to load stats";
+      setStatsError(message);
+      console.error("Failed to load stats:", err);
+    } finally {
+      setIsStatsLoading(false);
     }
   }, []);
 
@@ -72,6 +139,17 @@ export function useSentimentAnalysis() {
   // ------------------------------------------------------
   const analyze = useCallback(
     async (text: string) => {
+      const trimmedText = text.trim();
+      if (!trimmedText) {
+        setError("Please enter review text to analyze.");
+        toast({
+          title: "Validation Error",
+          description: "Please enter review text to analyze.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       setIsLoading(true);
       setError(null);
 
@@ -79,46 +157,57 @@ export function useSentimentAnalysis() {
         const response = await fetch(`${API_BASE_URL}/predict`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text }),
+          body: JSON.stringify({ text: trimmedText }),
         });
 
         if (!response.ok) {
-          throw new Error(`API Error: ${response.status}`);
+          const errData = await response.json().catch(() => null);
+          throw new Error(
+            errData?.error || errData?.details || `Server error (${response.status})`
+          );
         }
 
-        const data: ApiResponse = await response.json();
+        const data: PredictResponse = await response.json();
 
         let mappedSentiment: "positive" | "negative" | "neutral";
-        if (data.sentiment.includes("Positive")) mappedSentiment = "positive";
-        else if (data.sentiment.includes("Negative")) mappedSentiment = "negative";
-        else mappedSentiment = "neutral";
+        const normalized = (data.sentiment || "").toLowerCase();
+        if (normalized.includes("positive")) {
+          mappedSentiment = "positive";
+        } else if (normalized.includes("negative")) {
+          mappedSentiment = "negative";
+        } else {
+          mappedSentiment = "neutral";
+        }
 
         const sentimentResult: SentimentData = {
           sentiment: mappedSentiment,
           confidence: data.confidence,
-          text,
+          text: trimmedText,
           timestamp: new Date(),
         };
 
         setResult(sentimentResult);
 
-        // Refresh history + dashboard stats from DB
-        await loadHistoryFromDB();
-        await loadStats();
+        // Refresh history + dashboard stats from DB asynchronously
+        loadHistoryFromDB();
+        loadStats();
 
+        const confidenceDisplay = (data.confidence * 100).toFixed(2);
         toast({
           title: "Analysis Complete",
-          description: `Detected ${mappedSentiment} sentiment with ${Math.round(
-            data.confidence * 100
-          )}% confidence.`,
+          description: `Detected ${mappedSentiment.toUpperCase()} sentiment with ${confidenceDisplay}% confidence.`,
         });
       } catch (err) {
         const message =
-          err instanceof Error ? err.message : "Failed to analyze sentiment";
+          err instanceof TypeError && err.message.includes("fetch")
+            ? `Cannot connect to backend server at ${API_BASE_URL}. Please ensure the server is running.`
+            : err instanceof Error
+            ? err.message
+            : "Failed to analyze sentiment";
         setError(message);
 
         toast({
-          title: "Error",
+          title: "Analysis Failed",
           description: message,
           variant: "destructive",
         });
@@ -134,6 +223,11 @@ export function useSentimentAnalysis() {
   // ------------------------------------------------------
   const analyzeFile = useCallback(
     async (file: File) => {
+      if (!file) {
+        setError("Please select a valid CSV file.");
+        return;
+      }
+
       setIsFileLoading(true);
       setError(null);
       setCsvSummary(null);
@@ -148,25 +242,26 @@ export function useSentimentAnalysis() {
         });
 
         if (!response.ok) {
-          throw new Error("CSV backend not available.");
+          const errData = await response.json().catch(() => null);
+          throw new Error(
+            errData?.error || errData?.details || `CSV analysis failed with status ${response.status}`
+          );
         }
 
         const data: CsvApiResponse = await response.json();
 
         const summary: CsvSummaryData = {
-          veryPositive: data.very_positive || 0,
           positive: data.positive || 0,
           neutral: data.neutral || 0,
           negative: data.negative || 0,
-          veryNegative: data.very_negative || 0,
           total: data.total || 0,
         };
 
         setCsvSummary(summary);
 
         // Refresh dashboard + history because CSV saves in DB
-        await loadHistoryFromDB();
-        await loadStats();
+        loadHistoryFromDB();
+        loadStats();
 
         toast({
           title: "CSV Analysis Complete",
@@ -174,11 +269,15 @@ export function useSentimentAnalysis() {
         });
       } catch (err) {
         const message =
-          err instanceof Error ? err.message : "Failed to analyze file";
+          err instanceof TypeError && err.message.includes("fetch")
+            ? `Cannot connect to backend server at ${API_BASE_URL}. Please ensure the server is running.`
+            : err instanceof Error
+            ? err.message
+            : "Failed to analyze CSV file";
         setError(message);
 
         toast({
-          title: "Error",
+          title: "CSV Analysis Failed",
           description: message,
           variant: "destructive",
         });
@@ -202,18 +301,24 @@ export function useSentimentAnalysis() {
   useEffect(() => {
     loadHistoryFromDB();
     loadStats();
-  }, []);
+  }, [loadHistoryFromDB, loadStats]);
 
   return {
     isLoading,
     isFileLoading,
+    isHistoryLoading,
+    isStatsLoading,
     result,
     csvSummary,
     history,
     stats,
     error,
+    historyError,
+    statsError,
     analyze,
     analyzeFile,
+    loadHistoryFromDB,
+    loadStats,
     clearResult,
     clearCsvSummary,
     clearHistory,

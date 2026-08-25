@@ -49,7 +49,7 @@ export function SentimentInput({ onAnalyze, isLoading }: SentimentInputProps) {
 
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
-            Our BERT model will analyze the sentiment of your review
+            Our custom BiLSTM model will analyze the sentiment of your review
           </p>
           <Button
             type="submit"
