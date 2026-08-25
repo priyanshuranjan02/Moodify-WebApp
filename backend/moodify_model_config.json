@@ -1,0 +1,26 @@
+{
+    "model_type": "MoodifyBiLSTM5Class",
+    "vocab_size": 30002,
+    "embedding_dim": 128,
+    "hidden_dim": 160,
+    "num_layers": 2,
+    "num_classes": 5,
+    "dropout": 0.4,
+    "max_length": 128,
+    "pad_token": "<PAD>",
+    "unk_token": "<UNK>",
+    "label_mapping": {
+        "0": "Very Negative",
+        "1": "Negative",
+        "2": "Neutral",
+        "3": "Positive",
+        "4": "Very Positive"
+    },
+    "moodify_mapping": {
+        "0": "Negative",
+        "1": "Negative",
+        "2": "Neutral",
+        "3": "Positive",
+        "4": "Positive"
+    }
+}

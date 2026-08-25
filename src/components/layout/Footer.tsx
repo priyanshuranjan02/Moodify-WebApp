@@ -7,7 +7,7 @@ export function Footer() {
       {/* Logo + Brand */}
       <div className="flex items-center gap-3 mb-2">
         <img 
-          src="/Logo2.png"   // <-- Replace with /logo.svg if using SVG
+          src="/Logo2.png"
           alt="Moodify Logo"
           className="w-10 h-10"
         />

@@ -23,7 +23,15 @@ dist-ssr
 *.sln
 *.sw?
 
-# backend/model/
-# *.bin
-# *.safetensors
-# *.pt
+# Secrets
+moodify-firebase-key.json
+.env
+test_firebase.py
+
+# Python
+__pycache__/
+*.pyc
+
+# OS
+.DS_Store
+Thumbs.db

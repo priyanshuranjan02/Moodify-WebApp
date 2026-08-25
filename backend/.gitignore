@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.env
+
+# Firebase credentials
+moodify-firebase-key.json
+
+# Local testing
+test_firebase.py
+test.csv
+.DS_Store
