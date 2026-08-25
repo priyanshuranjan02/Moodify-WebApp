@@ -51,37 +51,85 @@ FIREBASE_KEY_PATH = os.path.join(
     "moodify-firebase-key.json"
 )
 
+FIREBASE_PROJECT_ID = None
+firebase_credentials = None
+
 
 # ============================================================
 # FIREBASE CONFIGURATION
 # ============================================================
 
-FIREBASE_PROJECT_ID = None
+def load_firebase_config():
 
-if os.path.exists(FIREBASE_KEY_PATH):
-
-    with open(
-        FIREBASE_KEY_PATH,
-        "r",
-        encoding="utf-8"
-    ) as f:
-
-        firebase_config = json.load(f)
-
-    FIREBASE_PROJECT_ID = firebase_config.get(
-        "project_id"
+    firebase_json = os.getenv(
+        "FIREBASE_SERVICE_ACCOUNT_JSON"
     )
 
-else:
+    # Production: Render environment variable
+    if firebase_json:
 
-    print(
-        "⚠️ Firebase key not found locally."
+        try:
+            config = json.loads(
+                firebase_json
+            )
+
+            print(
+                "✅ Firebase credentials loaded "
+                "from environment"
+            )
+
+            return config
+
+        except json.JSONDecodeError as e:
+
+            raise Exception(
+                f"Invalid FIREBASE_SERVICE_ACCOUNT_JSON: {e}"
+            )
+
+    # Local development: JSON file
+    if os.path.exists(
+        FIREBASE_KEY_PATH
+    ):
+
+        with open(
+            FIREBASE_KEY_PATH,
+            "r",
+            encoding="utf-8"
+        ) as f:
+
+            config = json.load(f)
+
+        print(
+            "✅ Firebase credentials loaded "
+            "from local file"
+        )
+
+        return config
+
+    raise Exception(
+        "Firebase credentials not found. "
+        "Set FIREBASE_SERVICE_ACCOUNT_JSON "
+        "or provide moodify-firebase-key.json."
     )
 
+
+firebase_config = load_firebase_config()
+
+FIREBASE_PROJECT_ID = firebase_config.get(
+    "project_id"
+)
+
+if not FIREBASE_PROJECT_ID:
+
+    raise Exception(
+        "Firebase project_id missing "
+        "from service-account credentials."
+    )
 
 FIRESTORE_BASE_URL = (
     "https://firestore.googleapis.com/v1/projects/"
-    f"{FIREBASE_PROJECT_ID}/databases/(default)/documents"
+    f"{FIREBASE_PROJECT_ID}"
+    "/databases/(default)/documents"
 )
 
 
@@ -96,18 +144,12 @@ def get_firestore_token():
 
     global firebase_credentials
 
-    if not os.path.exists(FIREBASE_KEY_PATH):
-
-        raise Exception(
-            "Firebase service-account key not found."
-        )
-
     if firebase_credentials is None:
 
         firebase_credentials = (
-            service_account.Credentials.from_service_account_file(
+            service_account.Credentials.from_service_account_info(
 
-                FIREBASE_KEY_PATH,
+                firebase_config,
 
                 scopes=[
                     "https://www.googleapis.com/auth/datastore"
@@ -125,7 +167,6 @@ def get_firestore_token():
         )
 
     return firebase_credentials.token
-
 
 # ============================================================
 # FIRESTORE REST WRITE
