@@ -367,36 +367,28 @@ class MoodifyBiLSTM5Class(nn.Module):
             num_classes
         )
 
-    def forward(self, x):
-
+    def forward(self, x, lengths):
         embedded = self.embedding(x)
 
-        output, (hidden, cell) = (
-            self.lstm(embedded)
+        packed = nn.utils.rnn.pack_padded_sequence(
+            embedded,
+            lengths.cpu(),
+            batch_first=True,
+            enforce_sorted=False,
         )
 
-        # Last forward and backward states
-        forward_hidden = hidden[-2]
+        _, (hidden, _) = self.lstm(packed)
 
+        forward_hidden = hidden[-2]
         backward_hidden = hidden[-1]
 
         hidden_combined = torch.cat(
-            (
-                forward_hidden,
-                backward_hidden
-            ),
-            dim=1
+            (forward_hidden, backward_hidden),
+            dim=1,
         )
 
-        hidden_combined = self.dropout(
-            hidden_combined
-        )
-
-        logits = self.fc(
-            hidden_combined
-        )
-
-        return logits
+        hidden_combined = self.dropout(hidden_combined)
+        return self.fc(hidden_combined)
 
 
 # ============================================================
@@ -459,42 +451,32 @@ def load_model():
 # ============================================================
 
 def tokenize(text):
-
-    text = text.lower()
-
-    text = re.sub(
-        r"[^a-z0-9\s']",
-        " ",
-        text
+    return re.findall(
+        r"[a-z]+(?:'[a-z]+)?",
+        text.lower(),
     )
 
-    tokens = text.split()
+
+def encode_text(text):
+    tokens = tokenize(text)
 
     token_ids = [
-
-        VOCAB.get(
-            token,
-            UNK_INDEX
-        )
-
+        VOCAB.get(token, UNK_INDEX)
         for token in tokens
     ]
 
-    token_ids = token_ids[
-        :MAX_LENGTH
-    ]
+    token_ids = token_ids[:MAX_LENGTH]
+    length = len(token_ids)
 
-    if len(token_ids) < MAX_LENGTH:
+    if length == 0:
+        token_ids = [UNK_INDEX]
+        length = 1
 
-        token_ids += [
+    token_ids += [PAD_INDEX] * (
+        MAX_LENGTH - len(token_ids)
+    )
 
-            PAD_INDEX
-        ] * (
-            MAX_LENGTH
-            - len(token_ids)
-        )
-
-    return token_ids
+    return token_ids, length
 
 
 # ============================================================
@@ -502,67 +484,41 @@ def tokenize(text):
 # ============================================================
 
 def predict_sentiment(text):
-
+    # Ensure the model and checkpoint are loaded
     load_model()
 
-    token_ids = tokenize(
-        text
-    )
+    token_ids, length = encode_text(text)
 
     input_tensor = torch.tensor(
         [token_ids],
-        dtype=torch.long
+        dtype=torch.long,
+    )
+
+    length_tensor = torch.tensor(
+        [length],
+        dtype=torch.long,
     )
 
     with torch.no_grad():
+        logits = model(input_tensor, length_tensor)
+        probabilities = torch.softmax(logits, dim=1)
 
-        logits = model(
-            input_tensor
+        predicted_class = int(
+            torch.argmax(probabilities, dim=1).item()
         )
 
-        probabilities = torch.softmax(
-            logits,
-            dim=1
+        confidence = float(
+            probabilities[0, predicted_class].item()
         )
 
-    predicted_class = int(
-        torch.argmax(
-            probabilities,
-            dim=1
-        ).item()
-    )
-
-    confidence = float(
-        probabilities[
-            0,
-            predicted_class
-        ].item()
-    )
-
-    five_class_sentiment = LABEL_MAPPING[
-        predicted_class
-    ]
-
-    moodify_sentiment = MOODIFY_MAPPING[
-        predicted_class
-    ]
+    five_class_sentiment = LABEL_MAPPING[predicted_class]
+    moodify_sentiment = MOODIFY_MAPPING[predicted_class]
 
     return {
-
-        "sentiment":
-            moodify_sentiment,
-
-        "confidence":
-            round(
-                confidence,
-                4
-            ),
-
-        "five_class":
-            five_class_sentiment,
-
-        "class_id":
-            predicted_class
+        "sentiment": moodify_sentiment,
+        "confidence": round(confidence, 4),
+        "five_class": five_class_sentiment,
+        "class_id": predicted_class,
     }
 
 
